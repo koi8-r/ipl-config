@@ -1,0 +1,9 @@
+[run]
+branch = True
+omit =
+    tests/*
+    ipl_config/_optional_libs.py
+
+[report]
+ignore_errors = true
+show_missing = true

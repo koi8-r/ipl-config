@@ -1,0 +1,6 @@
+venv
+/.venv/
+/.idea/
+**/__pycache__/
+/.mypy_cache/
+/.coverage

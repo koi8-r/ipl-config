@@ -1,0 +1,18 @@
+[MASTER]
+
+disable=
+    C0114,  # missing-module-docstring
+    C0115,  # missing-class-docstring
+    C0116,  # missing-function-docstring
+    C0103,  # invalid-name
+    C1802,  # use-implicit-booleaness-not-len
+    R0205,  # useless-object-inheritance
+    W0511,  # todos
+    W0108,  # unnecessary-lambda
+    R1707,  # trailing-comma-tuple
+
+ignore=
+ignore-paths=\.venv/,\.git/
+ignore-patterns=
+
+py-version=3.10

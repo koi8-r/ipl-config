@@ -1,0 +1,15 @@
+[flake8]
+extend-select =
+  C4  # flake8-comprehensions
+ignore =
+#  I100  # There is need to knowledge about application package name and a lot of false positives
+application-import-names = ipl_config,tests
+import-order-style = pycharm
+max-line-length = 79
+exclude =
+    .git,
+    .idea,
+    .venv,
+    .mypy_cache,
+    .pytest_cache,
+    __pycache__

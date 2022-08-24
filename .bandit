@@ -1,0 +1,8 @@
+[bandit]
+exclude: ./.venv/*,./tests/*
+# B106: hardcoded password func arg
+# B104: hardcoded bind all interfaces
+# B311: pseudo random generators
+# B101: assert_used
+#
+skips: B106,B104,B311,B101
