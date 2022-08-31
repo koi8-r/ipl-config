@@ -37,20 +37,15 @@ SettingsStrategyCallable = Callable[[Type[S] | S], Dict[str, Any]]
 
 class SettingsStrategyMetaclass(ABCMeta):  # noqa: B024
     @no_type_check
-    # type: ignore[too-few-public-methods]
-    # pylint: disable=bad-mcs-classmethod-argument
-    def __new__(
-        mcs,  # noqa: N804
-        name,
-        bases,
-        namespace,
-        **kwargs,
-    ):
-        cls = super().__new__(mcs, name, bases, namespace, **kwargs)
-        for dep in namespace.get('__dependencies__') or ():
+    def __call__(cls, *args, **kwargs):
+        """
+        Ensure the class has all its dependencies during constructor
+        without needs to call a `super`
+        """
+        for dep in getattr(cls, '__dependencies__', None) or ():
             if isinstance(dep, Exception):
                 raise dep
-        return cls
+        return super().__call__(*args, **kwargs)
 
 
 # type: ignore[too-few-public-methods]
