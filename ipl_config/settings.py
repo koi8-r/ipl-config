@@ -11,25 +11,7 @@ from pydantic import BaseConfig, BaseModel
 from pydantic.config import Extra
 from pydantic.utils import deep_update
 
-from .dumploads import (  # noqa: F401
-    ConfigDumpCallable,
-    ConfigDumpsCallable,
-    ConfigLoadCallable,
-    ConfigLoadsCallable,
-    StrPathIO,
-    json_dump,
-    json_dumps,
-    json_load,
-    json_loads,
-    toml_dump,
-    toml_dumps,
-    toml_load,
-    toml_loads,
-    yaml_dump,
-    yaml_dumps,
-    yaml_load,
-    yaml_loads,
-)
+from .dumploads import StrPathIO, json_dump
 from .source import (
     DotEnvSettingsStrategy,
     EnvSettingsStrategy,
@@ -52,18 +34,6 @@ class BaseSettings(BaseModel):
         validate_all: bool = True
         extra: Extra = Extra.ignore
         arbitrary_types_allowed = True
-        json_load: ConfigLoadCallable = json_load  # noqa: F811
-        json_loads: ConfigLoadsCallable = json_loads  # noqa: F811
-        json_dump: ConfigDumpCallable = json_dump  # noqa: F811
-        json_dumps: ConfigDumpsCallable = json_dumps  # noqa: F811
-        yaml_load: ConfigLoadCallable = yaml_load  # noqa: F811
-        yaml_loads: ConfigLoadsCallable = yaml_loads  # noqa: F811
-        yaml_dump: ConfigDumpCallable = yaml_dump  # noqa: F811
-        yaml_dumps: ConfigDumpsCallable = yaml_dumps  # noqa: F811
-        toml_load: ConfigLoadCallable = toml_load  # noqa: F811
-        toml_loads: ConfigLoadsCallable = toml_loads  # noqa: F811
-        toml_dump: ConfigDumpCallable = toml_dump  # noqa: F811
-        toml_dumps: ConfigDumpsCallable = toml_dumps  # noqa: F811
 
     __config__: ClassVar[Type[Config]] = Config
 
@@ -111,15 +81,13 @@ class BaseSettings(BaseModel):
                     break
 
         super().__init__(
-            **deep_update(
-                *reversed([s(type(self)) for s in source_strategies])
-            )
+            **deep_update(*reversed([s(self) for s in source_strategies]))
         )
 
     def _write_json(self, o: Dict[str, Any], f: StrPathIO, **kw: Any) -> None:
         # take encoder from `self.__config__.json_encoders`
         encoder = kw.pop('default', self.__json_encoder__)
-        self.__config__.json_dump(o, f, default=encoder, **kw)
+        json_dump(o, f, default=encoder, **kw)
 
     def write_schema(self, f: StrPathIO = sys.stdout, **kw: Any) -> None:
         return self._write_json(self.schema(), f, **kw)

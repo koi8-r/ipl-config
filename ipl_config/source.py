@@ -3,10 +3,21 @@
 from __future__ import annotations
 
 import os
-from abc import ABC, abstractmethod
+from abc import ABCMeta, abstractmethod
 from os import PathLike
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional, Tuple, Type, TypeVar
+from types import ModuleType
+from typing import (
+    Any,
+    Callable,
+    ClassVar,
+    Dict,
+    Optional,
+    Sequence,
+    Type,
+    TypeVar,
+    no_type_check,
+)
 from warnings import warn
 
 from pydantic import BaseModel
@@ -16,15 +27,42 @@ from pydantic.fields import SHAPE_SINGLETON, ModelField  # noqa: I101
 import ipl_config  # pylint: disable=unused-import,cyclic-import  # noqa
 
 from ._optional_libs import dotenv  # noqa: I202
-from .dumploads import ConfigLoadCallable
+from ._optional_libs import toml, yaml
+from .dumploads import ConfigLoadCallable, json_load, toml_load, yaml_load
 
 
 S = TypeVar('S', bound='ipl_config.settings.BaseSettings')
 SettingsStrategyCallable = Callable[[Type[S] | S], Dict[str, Any]]
 
 
+class SettingsStrategyMetaclass(ABCMeta):  # noqa: B024
+    @no_type_check
+    # type: ignore[too-few-public-methods]
+    # pylint: disable=bad-mcs-classmethod-argument
+    def __new__(
+        mcs,  # noqa: N804
+        name,
+        bases,
+        namespace,
+        **kwargs,
+    ):
+        cls = super().__new__(mcs, name, bases, namespace, **kwargs)
+        for dep in namespace.get('__dependencies__') or ():
+            if isinstance(dep, Exception):
+                raise dep
+        return cls
+
+
+# type: ignore[too-few-public-methods]
 # pylint: disable=too-few-public-methods
-class EnvSettingsStrategy(object):
+class SettingsStrategy(metaclass=SettingsStrategyMetaclass):
+    __dependencies__: ClassVar[
+        Sequence[ModuleType | ImportError] | None
+    ] = None
+
+
+# pylint: disable=too-few-public-methods
+class EnvSettingsStrategy(SettingsStrategy):
     __slots__ = (
         'env_prefix',
         'env_vars',
@@ -114,18 +152,18 @@ class DotEnvSettingsStrategy(EnvSettingsStrategy):
 
 
 # pylint: disable=too-few-public-methods
-class KwSettingsStrategy(InitSettingsSource):
+class KwSettingsStrategy(SettingsStrategy, InitSettingsSource):
     def __init__(self, **kw: Any) -> None:
         super().__init__(init_kwargs=kw)
 
 
-class FileSettingsStrategy(ABC):
+class FileSettingsStrategy(SettingsStrategy):
     __slots__ = (
         'path',
         'config_format',
     )
 
-    __extensions__: Tuple[str, ...] = ()
+    __extensions__: ClassVar[Sequence[str]] = ()
 
     def __init__(
         self,
@@ -175,27 +213,29 @@ class JsonSettingsStrategy(FileSettingsStrategy):
     )
 
     def get_loader(self, clazz: Type[S] | S) -> ConfigLoadCallable:
-        return clazz.__config__.json_load
+        return json_load
 
 
 class YamlSettingsStrategy(FileSettingsStrategy):
+    __dependencies__ = (yaml,)
     __extensions__ = (
         'yaml',
         'yml',
     )
 
     def get_loader(self, clazz: Type[S] | S) -> ConfigLoadCallable:
-        return clazz.__config__.yaml_load
+        return yaml_load
 
 
 class TomlSettingsStrategy(FileSettingsStrategy):
+    __dependencies__ = (toml,)
     __extensions__ = (
         'toml',
         'tml',
     )
 
     def get_loader(self, clazz: Type[S] | S) -> ConfigLoadCallable:
-        return clazz.__config__.toml_load
+        return toml_load
 
 
 def read_env_file(
@@ -207,8 +247,8 @@ def read_env_file(
     is_env_default = str(path) == '.env'
     is_env_exists = path.is_file()
 
-    if is_env_exists and not dotenv:
-        warn('python-dotenv is not installed', ImportWarning)
+    if is_env_exists and isinstance(dotenv, Exception):
+        warn(str(dotenv), ImportWarning)
     elif not is_env_exists and not is_env_default:
         warn(f"{path} is not a file", UserWarning)
     else:

@@ -5,7 +5,7 @@ from os import PathLike
 from pathlib import Path
 from typing import IO, Any, Dict, Generator, Protocol  # noqa: I101
 
-from ._optional_libs import toml, toml_installed, yaml, yaml_installed
+from ._optional_libs import toml, yaml
 
 
 StrPathIO = str | PathLike | IO | io.IOBase
@@ -81,7 +81,6 @@ def json_loads(s: str, **kw: Any) -> Any:
 # === YAML ===
 
 
-@yaml_installed
 def yaml_dump(obj: Dict[str, Any], f: StrPathIO, **kw: Any) -> None:
     allow_unicode = kw.pop('allow_unicode', True)
     encoding = kw.pop('encoding', 'utf-8')
@@ -97,20 +96,17 @@ def yaml_dump(obj: Dict[str, Any], f: StrPathIO, **kw: Any) -> None:
         )
 
 
-@yaml_installed
 def yaml_dumps(obj: Dict[str, Any], **kw: Any) -> str:
     sio = io.StringIO()
     yaml_dump(obj, sio, **kw)
     return sio.getvalue()
 
 
-@yaml_installed
 def yaml_load(f: StrPathIO, **_: Any) -> Any:
     with ensure_stream(f) as s:
         return yaml.load(s, yaml.SafeLoader)
 
 
-@yaml_installed
 def yaml_loads(s: str, **_: Any) -> Any:
     return yaml.load(s, yaml.SafeLoader)
 
@@ -118,23 +114,19 @@ def yaml_loads(s: str, **_: Any) -> Any:
 # === TOML ===
 
 
-@toml_installed
 def toml_dump(obj: Dict[str, Any], f: StrPathIO, **kw: Any) -> None:
     with ensure_stream(f, write=True) as s:
         toml.dump(obj, s, **kw)
 
 
-@toml_installed
 def toml_dumps(obj: Dict[str, Any], **kw: Any) -> str:
     return toml.dumps(obj, **kw)
 
 
-@toml_installed
 def toml_load(f: StrPathIO, **kw: Any) -> Any:
     with ensure_stream(f) as s:
         return toml.load(s, **kw)
 
 
-@toml_installed
 def toml_loads(s: str, **kw: Any) -> Any:
     return toml.loads(s, **kw)
