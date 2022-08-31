@@ -7,15 +7,15 @@ from abc import ABCMeta, abstractmethod
 from os import PathLike
 from pathlib import Path
 from types import ModuleType
-from typing import (
+from typing import (  # noqa: I101
+    TYPE_CHECKING,
     Any,
-    Callable,
     ClassVar,
     Dict,
     Optional,
+    Protocol,
     Sequence,
     Type,
-    TypeVar,
     no_type_check,
 )
 from warnings import warn
@@ -24,15 +24,22 @@ from pydantic import BaseModel
 from pydantic.env_settings import InitSettingsSource
 from pydantic.fields import SHAPE_SINGLETON, ModelField  # noqa: I101
 
-import ipl_config  # pylint: disable=unused-import,cyclic-import  # noqa
-
 from ._optional_libs import dotenv  # noqa: I202
 from ._optional_libs import toml, yaml
 from .dumploads import ConfigLoadCallable, json_load, toml_load, yaml_load
 
 
-S = TypeVar('S', bound='ipl_config.settings.BaseSettings')
-SettingsStrategyCallable = Callable[[Type[S] | S], Dict[str, Any]]
+if TYPE_CHECKING:
+    from ipl_config import BaseSettings
+
+
+class SettingsStrategyCallable(
+    Protocol,
+):  # pylint: disable=too-few-public-methods
+    def __call__(
+        self, clazz: Type[BaseSettings] | BaseSettings
+    ) -> Dict[str, Any]:
+        pass
 
 
 class SettingsStrategyMetaclass(ABCMeta):  # noqa: B024
@@ -90,7 +97,9 @@ class EnvSettingsStrategy(SettingsStrategy):
                 self.env_prefix = env_prefix.lower()
             self.env_vars = {k.lower(): v for k, v in self.env_vars.items()}
 
-    def __call__(self, clazz: Type[S] | S) -> Dict[str, Any]:
+    def __call__(
+        self, clazz: Type[BaseSettings] | BaseSettings
+    ) -> Dict[str, Any]:
         return self._from_env(clazz, self.env_prefix)
 
     def _from_env(
@@ -168,7 +177,9 @@ class FileSettingsStrategy(SettingsStrategy):
         self.path: Path = Path(path).expanduser()
         self.config_format: Optional[str] = config_format
 
-    def __call__(self, clazz: Type[S] | S) -> Dict[str, Any]:
+    def __call__(
+        self, clazz: Type[BaseSettings] | BaseSettings
+    ) -> Dict[str, Any]:
         if not self.is_acceptable(self.path, self.config_format):
             return {}
 
@@ -176,7 +187,9 @@ class FileSettingsStrategy(SettingsStrategy):
         return loader(self.path)
 
     @abstractmethod
-    def get_loader(self, clazz: Type[S] | S) -> ConfigLoadCallable:
+    def get_loader(
+        self, clazz: Type[BaseSettings] | BaseSettings
+    ) -> ConfigLoadCallable:
         pass
 
     @classmethod
@@ -207,7 +220,9 @@ class JsonSettingsStrategy(FileSettingsStrategy):
         'js',
     )
 
-    def get_loader(self, clazz: Type[S] | S) -> ConfigLoadCallable:
+    def get_loader(
+        self, clazz: Type[BaseSettings] | BaseSettings
+    ) -> ConfigLoadCallable:
         return json_load
 
 
@@ -218,7 +233,9 @@ class YamlSettingsStrategy(FileSettingsStrategy):
         'yml',
     )
 
-    def get_loader(self, clazz: Type[S] | S) -> ConfigLoadCallable:
+    def get_loader(
+        self, clazz: Type[BaseSettings] | BaseSettings
+    ) -> ConfigLoadCallable:
         return yaml_load
 
 
@@ -229,7 +246,9 @@ class TomlSettingsStrategy(FileSettingsStrategy):
         'tml',
     )
 
-    def get_loader(self, clazz: Type[S] | S) -> ConfigLoadCallable:
+    def get_loader(
+        self, clazz: Type[BaseSettings] | BaseSettings
+    ) -> ConfigLoadCallable:
         return toml_load
 
 
