@@ -1,0 +1,56 @@
+name: tests
+
+on:
+  push:
+    branches:
+    - '**'
+  pull_request:
+
+jobs:
+  ci:
+    name: CI pipeline
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+        - ubuntu-latest
+        python-version:
+        - '3.10'
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup Python 3.10
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Cache poetry virtualenv
+      uses: actions/cache@v2
+      id: cache
+      with:
+        path: ${{ env.pythonLocation }}
+        key: ${{ runner.os }}-python-${{ env.pythonLocation }}-${{ hashFiles('poetry.lock') }}
+    - name: Install poetry
+      if: steps.cache.outputs.cache-hit != 'true'
+      run: |
+        python -m pip install -U pip
+        python -m pip install poetry
+    - name: Poetry config
+      run:
+        python -m poetry config virtualenvs.create false
+    - name: Install dependencies
+      if: steps.cache.outputs.cache-hit != 'true'
+      run:
+        python -m poetry install -E dotenv -E yaml -E toml
+    - name: Run tests and coverage
+      run: make test
+    - name: Upload coverage report
+      if: ${{ false }}
+      run: |
+        curl -Os https://uploader.codecov.io/latest/linux/codecov
+        chmod +x codecov
+        ./codecov -t ${{ secrets.CODECOV_TOKEN }}
+    - name: Upload coverage report
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        fail_ci_if_error: false
+        verbose: true
