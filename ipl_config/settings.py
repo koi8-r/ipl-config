@@ -49,17 +49,11 @@ class BaseSettings(BaseModel):
         if config_file is not None:
             config_file = Path(config_file)
 
-        # Maybe passing `kwargs` instead of named arguments is more universal.
-        # Also, we can pass `self` to `__init__` instead of `__call__`
-        # For example: `SomeSettingsStrategy(self, *a, **kw).
-
         if source_strategies is None:
             cfg = self.__config__
             source_strategies = [
                 KwSettingsStrategy(**kw),
-                EnvSettingsStrategy(
-                    env_prefix=env_prefix or cfg.env_prefix,
-                ),
+                EnvSettingsStrategy(env_prefix=env_prefix or cfg.env_prefix),
                 DotEnvSettingsStrategy(
                     env_prefix=env_prefix or cfg.env_prefix,
                     env_file=env_file or cfg.env_file,
@@ -73,10 +67,7 @@ class BaseSettings(BaseModel):
             ):
                 if config_file and s.is_acceptable(config_file, config_format):
                     source_strategies.append(
-                        s(
-                            config_file,
-                            config_format,
-                        ),  # type: ignore[abstract]
+                        s(config_file, config_format)  # type: ignore[abstract]
                     )
                     break
 

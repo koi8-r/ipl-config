@@ -5,7 +5,7 @@ from typing import Generator, Mapping, MutableMapping, Optional
 
 @contextmanager
 def environ(
-    new_env: Mapping[str, str],
+    new_env: Mapping[str, str]
 ) -> Generator[MutableMapping[str, Optional[str]], None, None]:
     old_env = os.environ.copy()
     os.environ.update(new_env)

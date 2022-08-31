@@ -17,8 +17,4 @@ except ImportError:
     yaml = ImportError('pyyaml is not installed')  # type: ignore[no-redef]
 
 
-__all__ = (
-    'dotenv',
-    'toml',
-    'yaml',
-)
+__all__ = 'dotenv', 'toml', 'yaml'

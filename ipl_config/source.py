@@ -34,7 +34,7 @@ if TYPE_CHECKING:
 
 
 class SettingsStrategyCallable(
-    Protocol,
+    Protocol
 ):  # pylint: disable=too-few-public-methods
     def __call__(
         self, clazz: Type[BaseSettings] | BaseSettings
@@ -47,7 +47,7 @@ class SettingsStrategyMetaclass(ABCMeta):  # noqa: B024
     def __call__(cls, *args, **kwargs):
         """
         Ensure the class has all its dependencies during constructor
-        without needs to call a `super`
+        without needs to call to `super`
         """
         for dep in getattr(cls, '__dependencies__', None) or ():
             if isinstance(dep, Exception):
@@ -65,11 +65,7 @@ class SettingsStrategy(metaclass=SettingsStrategyMetaclass):
 
 # pylint: disable=too-few-public-methods
 class EnvSettingsStrategy(SettingsStrategy):
-    __slots__ = (
-        'env_prefix',
-        'env_vars',
-        'case_sensitive',
-    )
+    __slots__ = 'env_prefix', 'env_vars', 'case_sensitive'
 
     def __init__(
         self,
@@ -123,7 +119,7 @@ class EnvSettingsStrategy(SettingsStrategy):
                 env_val = self._from_env(field.type_, prefix=env_name)
             else:
                 env_val = self.env_vars.get(  # type: ignore[assignment]
-                    env_name if self.case_sensitive else env_name.lower(),
+                    env_name if self.case_sensitive else env_name.lower()
                 )
 
             if env_val is not None:
@@ -146,10 +142,7 @@ class DotEnvSettingsStrategy(EnvSettingsStrategy):
         super().__init__(
             env_prefix=env_prefix,
             case_sensitive=case_sensitive,
-            env_vars=read_env_file(
-                env_file,
-                encoding=env_file_encoding,
-            )
+            env_vars=read_env_file(env_file, encoding=env_file_encoding)
             if env_file
             else {},
         )
@@ -162,17 +155,12 @@ class KwSettingsStrategy(SettingsStrategy, InitSettingsSource):
 
 
 class FileSettingsStrategy(SettingsStrategy):
-    __slots__ = (
-        'path',
-        'config_format',
-    )
+    __slots__ = 'path', 'config_format'
 
     __extensions__: ClassVar[Sequence[str]] = ()
 
     def __init__(
-        self,
-        path: str | PathLike,
-        config_format: Optional[str] = None,
+        self, path: str | PathLike, config_format: Optional[str] = None
     ):
         self.path: Path = Path(path).expanduser()
         self.config_format: Optional[str] = config_format
@@ -194,9 +182,7 @@ class FileSettingsStrategy(SettingsStrategy):
 
     @classmethod
     def is_acceptable(
-        cls,
-        path: Optional[Path] = None,
-        config_format: Optional[str] = None,
+        cls, path: Optional[Path] = None, config_format: Optional[str] = None
     ) -> bool:
         """
         :return: True if format is acceptable to loads
@@ -215,10 +201,7 @@ class FileSettingsStrategy(SettingsStrategy):
 
 
 class JsonSettingsStrategy(FileSettingsStrategy):
-    __extensions__ = (
-        'json',
-        'js',
-    )
+    __extensions__ = 'json', 'js'
 
     def get_loader(
         self, clazz: Type[BaseSettings] | BaseSettings
@@ -228,10 +211,7 @@ class JsonSettingsStrategy(FileSettingsStrategy):
 
 class YamlSettingsStrategy(FileSettingsStrategy):
     __dependencies__ = (yaml,)
-    __extensions__ = (
-        'yaml',
-        'yml',
-    )
+    __extensions__ = 'yaml', 'yml'
 
     def get_loader(
         self, clazz: Type[BaseSettings] | BaseSettings
@@ -241,10 +221,7 @@ class YamlSettingsStrategy(FileSettingsStrategy):
 
 class TomlSettingsStrategy(FileSettingsStrategy):
     __dependencies__ = (toml,)
-    __extensions__ = (
-        'toml',
-        'tml',
-    )
+    __extensions__ = 'toml', 'tml'
 
     def get_loader(
         self, clazz: Type[BaseSettings] | BaseSettings
@@ -253,9 +230,7 @@ class TomlSettingsStrategy(FileSettingsStrategy):
 
 
 def read_env_file(
-    path: str | PathLike,
-    *,
-    encoding: Optional[str] = None,
+    path: str | PathLike, *, encoding: Optional[str] = None
 ) -> Dict[str, Optional[str]]:
     path = Path(path).expanduser()
     is_env_default = str(path) == '.env'

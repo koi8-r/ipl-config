@@ -33,8 +33,7 @@ class ConfigDumpsCallable(Protocol):  # pylint: disable=too-few-public-methods
 
 @contextmanager
 def ensure_stream(
-    stream: StrPathIO,
-    write: bool = False,
+    stream: StrPathIO, write: bool = False
 ) -> Generator[IO | io.IOBase, None, None]:
     if isinstance(stream, io.IOBase):
         yield stream
@@ -56,10 +55,7 @@ def json_dump(obj: Dict[str, Any], f: StrPathIO, **kw: Any) -> None:
     ensure_ascii = kw.pop('ensure_ascii', False)
     with ensure_stream(f, write=True) as s:
         json.dump(
-            obj,
-            s,  # type: ignore[arg-type]
-            ensure_ascii=ensure_ascii,
-            **kw,
+            obj, s, ensure_ascii=ensure_ascii, **kw  # type: ignore[arg-type]
         )
 
 
