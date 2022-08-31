@@ -60,16 +60,24 @@ class BaseSettings(BaseModel):
                     env_file_encoding=cfg.env_file_encoding,
                 ),
             ]
-            for s in (
-                JsonSettingsStrategy,
-                YamlSettingsStrategy,
-                TomlSettingsStrategy,
-            ):
-                if config_file and s.is_acceptable(config_file, config_format):
-                    source_strategies.append(
-                        s(config_file, config_format)  # type: ignore[abstract]
+            if config_file:
+                for s in (
+                    JsonSettingsStrategy,
+                    YamlSettingsStrategy,
+                    TomlSettingsStrategy,
+                ):
+                    if s.is_acceptable(config_file, config_format):
+                        source_strategies.append(
+                            s(
+                                config_file,
+                                config_format,  # type: ignore[abstract]
+                            )
+                        )
+                        break
+                else:
+                    raise NotImplementedError(
+                        f"No readers found for the config file: {config_file}"
                     )
-                    break
 
         super().__init__(
             **deep_update(*reversed([s(self) for s in source_strategies]))
