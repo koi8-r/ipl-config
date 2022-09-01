@@ -1,0 +1,41 @@
+name: CodeQL
+
+on:
+  push:
+    branches:
+    - master
+  pull_request:
+    branches:
+    - master
+  schedule:
+  - cron: '26 1 * * 2'
+
+jobs:
+  analyze:
+    name: analyze
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language:
+        - python
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: init
+      uses: github/codeql-action/init@v2
+      with:
+        languages: ${{ matrix.language }}
+        # https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
+        # queries: security-extended,security-and-quality
+    - name: compile
+      uses: github/codeql-action/autobuild@v2
+      # See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
+      # - run: ./build+compile.sh
+    - name: run
+      uses: github/codeql-action/analyze@v2
