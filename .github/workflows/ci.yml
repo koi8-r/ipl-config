@@ -8,7 +8,6 @@ on:
 
 jobs:
   ci:
-    name: CI pipeline
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
