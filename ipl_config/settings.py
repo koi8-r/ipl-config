@@ -15,6 +15,7 @@ from .dumploads import StrPathIO, json_dump
 from .source import (
     DotEnvSettingsStrategy,
     EnvSettingsStrategy,
+    Hcl2SettingsStrategy,
     JsonSettingsStrategy,
     KwSettingsStrategy,
     SettingsStrategyCallable,
@@ -65,6 +66,7 @@ class BaseSettings(BaseModel):
                     JsonSettingsStrategy,
                     YamlSettingsStrategy,
                     TomlSettingsStrategy,
+                    Hcl2SettingsStrategy,
                 ):
                     if s.is_acceptable(config_file, config_format):
                         source_strategies.append(

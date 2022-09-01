@@ -25,8 +25,14 @@ from pydantic.env_settings import InitSettingsSource
 from pydantic.fields import SHAPE_SINGLETON, ModelField  # noqa: I101
 
 from ._optional_libs import dotenv  # noqa: I202
-from ._optional_libs import toml, yaml
-from .dumploads import ConfigLoadCallable, json_load, toml_load, yaml_load
+from ._optional_libs import hcl2, toml, yaml
+from .dumploads import (
+    ConfigLoadCallable,
+    hcl2_load,
+    json_load,
+    toml_load,
+    yaml_load,
+)
 
 
 if TYPE_CHECKING:
@@ -227,6 +233,16 @@ class TomlSettingsStrategy(FileSettingsStrategy):
         self, clazz: Type[BaseSettings] | BaseSettings
     ) -> ConfigLoadCallable:
         return toml_load
+
+
+class Hcl2SettingsStrategy(FileSettingsStrategy):
+    __dependencies__ = (hcl2,)
+    __extensions__ = 'hcl', 'hcl2', 'tf'
+
+    def get_loader(
+        self, clazz: Type[BaseSettings] | BaseSettings
+    ) -> ConfigLoadCallable:
+        return hcl2_load
 
 
 def read_env_file(

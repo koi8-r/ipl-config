@@ -5,7 +5,7 @@ from os import PathLike
 from pathlib import Path
 from typing import IO, Any, Dict, Generator, Protocol  # noqa: I101
 
-from ._optional_libs import toml, yaml
+from ._optional_libs import hcl2, toml, yaml
 
 
 StrPathIO = str | PathLike | IO | io.IOBase
@@ -126,3 +126,15 @@ def toml_load(f: StrPathIO, **kw: Any) -> Any:
 
 def toml_loads(s: str, **kw: Any) -> Any:
     return toml.loads(s, **kw)
+
+
+# === HCL2 ===
+
+
+def hcl2_load(f: StrPathIO, **_: Any) -> Any:
+    with ensure_stream(f) as s:
+        return hcl2.load(s)
+
+
+def hcl2_loads(s: str, **_: Any) -> Any:
+    return hcl2.loads(s)

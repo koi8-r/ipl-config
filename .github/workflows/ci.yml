@@ -38,7 +38,7 @@ jobs:
     - name: Install dependencies
       if: steps.cache.outputs.cache-hit != 'true'
       run:
-        python -m poetry install -E dotenv -E yaml -E toml
+        python -m poetry install -E dotenv -E yaml -E toml -E hcl2
     - name: Run tests and coverage
       run: make test
     - name: Upload coverage report

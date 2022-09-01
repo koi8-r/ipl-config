@@ -476,6 +476,18 @@ format = ["idna", "jsonpointer (>1.13)", "rfc3987", "strict-rfc3339", "webcolors
 format_nongpl = ["idna", "jsonpointer (>1.13)", "webcolors", "rfc3986-validator (>0.1.0)", "rfc3339-validator"]
 
 [[package]]
+name = "lark-parser"
+version = "0.10.1"
+description = "a modern parsing library"
+category = "main"
+optional = true
+python-versions = "*"
+
+[package.extras]
+nearley = ["js2py"]
+regex = ["regex"]
+
+[[package]]
 name = "lazy-object-proxy"
 version = "1.7.1"
 description = "A fast and thorough lazy object proxy."
@@ -740,6 +752,17 @@ python-versions = ">=3.5"
 cli = ["click (>=5.0)"]
 
 [[package]]
+name = "python-hcl2"
+version = "3.0.5"
+description = "A parser for HCL2"
+category = "main"
+optional = true
+python-versions = ">=3.6.0"
+
+[package.dependencies]
+lark-parser = ">=0.10.0,<0.11.0"
+
+[[package]]
 name = "pyyaml"
 version = "5.4.1"
 description = "YAML parser and emitter for Python"
@@ -1001,13 +1024,14 @@ multidict = ">=4.0"
 
 [extras]
 dotenv = ["python-dotenv"]
+hcl2 = ["python-hcl2"]
 toml = ["toml"]
 yaml = ["pyyaml"]
 
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "1154369fbdb865aae5c298803f48bebd2f04d050ce1d9c1749d75c3bb9f8895e"
+content-hash = "db34e14be69a412b0b4931de19c168ef50432b27308c3a2a53b2ca8a63fe8004"
 
 [metadata.files]
 aiohttp = [
@@ -1365,6 +1389,9 @@ jsonschema = [
     {file = "jsonschema-3.2.0-py2.py3-none-any.whl", hash = "sha256:4e5b3cf8216f577bee9ce139cbe72eca3ea4f292ec60928ff24758ce626cd163"},
     {file = "jsonschema-3.2.0.tar.gz", hash = "sha256:c8a85b28d377cc7737e46e2d9f2b4f44ee3c0e1deac6bf46ddefc7187d30797a"},
 ]
+lark-parser = [
+    {file = "lark-parser-0.10.1.tar.gz", hash = "sha256:42f367612a1bbc4cf9d8c8eb1b209d8a9b397d55af75620c9e6f53e502235996"},
+]
 lazy-object-proxy = [
     {file = "lazy-object-proxy-1.7.1.tar.gz", hash = "sha256:d609c75b986def706743cdebe5e47553f4a5a1da9c5ff66d76013ef396b5a8a4"},
     {file = "lazy_object_proxy-1.7.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:bb8c5fd1684d60a9902c60ebe276da1f2281a318ca16c1d0a96db28f62e9166b"},
@@ -1622,6 +1649,9 @@ pytest-cov = [
 python-dotenv = [
     {file = "python-dotenv-0.20.0.tar.gz", hash = "sha256:b7e3b04a59693c42c36f9ab1cc2acc46fa5df8c78e178fc33a8d4cd05c8d498f"},
     {file = "python_dotenv-0.20.0-py3-none-any.whl", hash = "sha256:d92a187be61fe482e4fd675b6d52200e7be63a12b724abbf931a40ce4fa92938"},
+]
+python-hcl2 = [
+    {file = "python-hcl2-3.0.5.tar.gz", hash = "sha256:f8beff86346c6f42ccad75d6d2af4a33981802b6a000de881cc93b649f49ed1c"},
 ]
 pyyaml = [
     {file = "PyYAML-5.4.1-cp27-cp27m-macosx_10_9_x86_64.whl", hash = "sha256:3b2b1824fe7112845700f815ff6a489360226a5609b96ec2190a45e62a9fc922"},

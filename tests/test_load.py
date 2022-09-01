@@ -39,6 +39,7 @@ class IplConfig(BaseSettings):  # pylint: disable=too-few-public-methods
         ('tests/.env', 'examples/config_example.json'),
         ('tests/.env', 'examples/config_example.yaml'),
         ('tests/example.env', 'examples/config_example.toml'),
+        ('tests/.env', 'examples/config_example.tf'),
     ),
 )
 def test_config_file(root_dir: Path, env_file: str, conf_file: str) -> None:
