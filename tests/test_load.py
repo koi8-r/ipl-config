@@ -1,15 +1,15 @@
 import io
 import json
+import os
 from datetime import datetime
 from ipaddress import IPv4Address
 from pathlib import Path
+from unittest import mock
 
 import pytest
 from pydantic import BaseModel, Field  # pylint: disable=no-name-in-module
 
 from ipl_config import BaseSettings
-
-from .utils import environ  # noqa: I202
 
 
 class TcpTransport(BaseModel):  # pylint: disable=too-few-public-methods
@@ -43,12 +43,13 @@ class IplConfig(BaseSettings):  # pylint: disable=too-few-public-methods
     ),
 )
 def test_config_file(root_dir: Path, env_file: str, conf_file: str) -> None:
-    with environ(
+    with mock.patch.dict(
+        os.environ,
         {
             'APP_CREATED': '2000-01-01T00:00:00Z',
             'app_http_bind': '0.0.0.0',
             'buff_size': '-1',
-        }
+        },
     ):
         cfg = IplConfig(
             env_file=root_dir / env_file,
