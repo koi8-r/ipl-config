@@ -12,3 +12,4 @@ def test_lower_dict() -> None:
     assert len(d) == 4
     assert repr(d) == "LowerCaseDict({'a': 'a', 'x': 'x', 'z': 'z', 'i': 1})"
     assert repr(d) == str(d)
+    assert 'Z' in d and 'z' in d
