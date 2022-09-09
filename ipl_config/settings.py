@@ -54,11 +54,15 @@ class BaseSettings(BaseModel):
             cfg = self.__config__
             source_strategies = [
                 KwSettingsStrategy(**kw),
-                EnvSettingsStrategy(env_prefix=env_prefix or cfg.env_prefix),
+                EnvSettingsStrategy(
+                    env_prefix=env_prefix or cfg.env_prefix,
+                    case_sensitive=cfg.case_sensitive,
+                ),
                 DotEnvSettingsStrategy(
                     env_prefix=env_prefix or cfg.env_prefix,
                     env_file=env_file or cfg.env_file,
                     env_file_encoding=cfg.env_file_encoding,
+                    case_sensitive=cfg.case_sensitive,
                 ),
             ]
             if config_file:

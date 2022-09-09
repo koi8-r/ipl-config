@@ -36,7 +36,7 @@ from .dumploads import (
 
 
 if TYPE_CHECKING:
-    from ipl_config import BaseSettings
+    from ipl_config import BaseSettings  # pragma: no cover
 
 
 class SettingsStrategyCallable(
@@ -45,7 +45,7 @@ class SettingsStrategyCallable(
     def __call__(
         self, clazz: Type[BaseSettings] | BaseSettings
     ) -> Dict[str, Any]:
-        pass
+        pass  # pragma: no cover
 
 
 class SettingsStrategyMetaclass(ABCMeta):  # noqa: B024
@@ -114,7 +114,7 @@ class EnvSettingsStrategy(SettingsStrategy):
         for field in clazz.__fields__.values():
             extra = field.field_info.extra
             if extra.get('deprecated'):
-                warn(f"{field.name} is deprecated", DeprecationWarning)
+                warn(f"{field.name!r} is deprecated", DeprecationWarning)
 
             env_name = extra.get('env')
             if not env_name:
@@ -184,7 +184,7 @@ class FileSettingsStrategy(SettingsStrategy):
     def get_loader(
         self, clazz: Type[BaseSettings] | BaseSettings
     ) -> ConfigLoadCallable:
-        pass
+        pass  # pragma: no cover
 
     @classmethod
     def is_acceptable(
@@ -255,7 +255,7 @@ def read_env_file(
     if is_env_exists and isinstance(dotenv, Exception):
         warn(str(dotenv), ImportWarning)
     elif not is_env_exists and not is_env_default:
-        warn(f"{path} is not a file", UserWarning)
+        warn(f"{str(path)!r} is not a file", UserWarning)
     else:
         return dotenv.dotenv_values(path, encoding=encoding or 'utf-8')
 

@@ -29,7 +29,7 @@ class Http(BaseModel):  # pylint: disable=too-few-public-methods
 class IplConfig(BaseSettings):  # pylint: disable=too-few-public-methods
     created: datetime
     version: str = 'v1'
-    http_host: str
+    http_host: str = Field(deprecated=True)
     http: Http
 
 
@@ -51,11 +51,14 @@ def test_config_file(root_dir: Path, env_file: str, conf_file: str) -> None:
             'buff_size': '-1',
         },
     ):
-        cfg = IplConfig(
-            env_file=root_dir / env_file,
-            config_file=root_dir / conf_file,
-            version=999,
-        )
+        with pytest.warns(
+            DeprecationWarning, match="'http_host' is deprecated"
+        ):
+            cfg = IplConfig(
+                env_file=root_dir / env_file,
+                config_file=root_dir / conf_file,
+                version=999,
+            )
 
         f = io.StringIO()
         cfg.write_json(f)
@@ -79,3 +82,67 @@ def test_config_file(root_dir: Path, env_file: str, conf_file: str) -> None:
         f.seek(0)
         f.truncate()
         cfg.write_schema(f)
+
+
+def test_envs_case(root_dir: Path) -> None:
+    class Bind(BaseModel):  # pylint: disable=too-few-public-methods
+        host: str = Field(env='APP_HTTP_HOST')
+        port: int
+
+    class Config(BaseSettings):
+        class Config:  # pylint: disable=too-few-public-methods
+            case_sensitive = True
+            env_prefix = 'APP'
+            env_file = root_dir / 'tests/.env'
+
+        http_2: bool = Field(env='h2')
+        http: Bind = Field(env='Listen')
+
+    with mock.patch.dict(
+        os.environ,
+        {
+            'app_http_host': '0.0.0.0',
+            'Listen_port': '3201',
+            'APP_http_port': '1024',
+            'h2': 'true',
+            'H2': 'false',
+        },
+    ):
+        cfg = Config()
+        actual = cfg.dict()
+        expected = {
+            'http': {'host': 'myname.lan', 'port': 3201},
+            'http_2': True,
+        }
+        assert actual == expected
+
+
+def test_no_env_prefix() -> None:
+    class Bind(BaseModel):  # pylint: disable=too-few-public-methods
+        host: str
+
+    class Config(BaseSettings):
+        class Config:  # pylint: disable=too-few-public-methods
+            env_prefix = None
+
+        http_2: bool
+        http: Bind
+
+    with mock.patch.dict(
+        os.environ, {'HTTP_HOST': '127.1.1.1', 'HTTP_2': 'false'}
+    ):
+        cfg = Config()
+        actual = cfg.dict()
+        expected = {'http': {'host': '127.1.1.1'}, 'http_2': False}
+        assert actual == expected
+
+
+def test_env_file() -> None:
+    class Config(BaseSettings):
+        class Config:  # pylint: disable=too-few-public-methods
+            env_file = 'non_existing.env'
+
+    with pytest.warns(
+        UserWarning, match=f"'{Config.Config.env_file}' is not a file"
+    ):
+        Config()

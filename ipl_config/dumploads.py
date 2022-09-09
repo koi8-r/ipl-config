@@ -13,22 +13,22 @@ StrPathIO = str | PathLike | IO | io.IOBase
 
 class ConfigLoadCallable(Protocol):  # pylint: disable=too-few-public-methods
     def __call__(self, f: StrPathIO, **kw: Any) -> Any:
-        pass
+        pass  # pragma: no cover
 
 
 class ConfigLoadsCallable(Protocol):  # pylint: disable=too-few-public-methods
     def __call__(self, s: str, **kw: Any) -> Any:
-        pass
+        pass  # pragma: no cover
 
 
 class ConfigDumpCallable(Protocol):  # pylint: disable=too-few-public-methods
     def __call__(self, obj: Dict[str, Any], f: StrPathIO, **kw: Any) -> None:
-        pass
+        pass  # pragma: no cover
 
 
 class ConfigDumpsCallable(Protocol):  # pylint: disable=too-few-public-methods
     def __call__(self, obj: Dict[str, Any], **kw: Any) -> str:
-        pass
+        pass  # pragma: no cover
 
 
 @contextmanager
