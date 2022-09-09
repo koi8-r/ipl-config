@@ -1,13 +1,22 @@
-name: tests
+name: ci
 
 on:
+  workflow_dispatch:
+  release:
+    types:
+      - created
   push:
     branches:
-    - '**'
+    - master
+    tags:
+    - 'v*'
   pull_request:
+    branches:
+    - master
 
 jobs:
-  ci:
+  test:
+    environment: ci
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -22,7 +31,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Cache poetry virtualenv
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       id: cache
       with:
         path: ${{ env.pythonLocation }}
@@ -53,3 +62,38 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         fail_ci_if_error: false
         verbose: true
+
+  publish:
+    if: startsWith(github.ref, 'refs/tags/v')
+    environment: ci
+    runs-on: ubuntu-latest
+    needs:
+    - test
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Setup Python 3.10
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    - name: Install dependencies
+      run: |
+        python -m pip install -U pip
+        python -m pip install poetry
+        poetry install --no-dev -v
+    - name: Build package
+      run: |
+        poetry version $(git describe --tags)
+        poetry build
+    - uses: actions/upload-artifact@v3
+      with:
+        name: dist
+        path: dist
+    - name: PyPi
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.PYPI_API_TOKEN }}
+        verify_metadata: true
+        skip_existing: true

@@ -3,7 +3,17 @@ name = "ipl-config"
 version = "0.1.0"
 description = "InPlat config adapters"
 authors = ["InPlat", "Valentin Nagornyy <valentin.nagornyy@inplat.ru>"]
-repository = ""
+repository = "https://github.com/koi8-r/ipl-config"
+readme = "README.md"
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
+]
+keywords = [
+  "config", "settings", "pydantic",
+  "json", "toml", "yaml", "hcl2",
+]
 
 [tool.poetry.dependencies]
 python = "^3.10"
