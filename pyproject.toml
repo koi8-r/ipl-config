@@ -1,14 +1,20 @@
 [tool.poetry]
 name = "ipl-config"
-version = "0.1.0"
+version = "0.1.2"
 description = "InPlat config adapters"
 authors = ["InPlat", "Valentin Nagornyy <valentin.nagornyy@inplat.ru>"]
 repository = "https://github.com/koi8-r/ipl-config"
 readme = "README.md"
+license = "MIT"
 classifiers = [
-  "Programming Language :: Python :: 3",
-  "License :: OSI Approved :: MIT License",
-  "Operating System :: OS Independent",
+  'Programming Language :: Python :: 3',
+  'License :: OSI Approved :: MIT License',
+  'Operating System :: OS Independent',
+  'Intended Audience :: Developers',
+  'Intended Audience :: Information Technology',
+  'Intended Audience :: System Administrators',
+  'Topic :: Software Development :: Libraries :: Python Modules',
+  'Topic :: Internet',
 ]
 keywords = [
   "config", "settings", "pydantic",
