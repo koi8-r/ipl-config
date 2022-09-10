@@ -16,6 +16,7 @@ from typing import (  # noqa: I101
     Protocol,
     Sequence,
     Type,
+    Union,
     no_type_check,
 )
 from warnings import warn
@@ -43,7 +44,7 @@ class SettingsStrategyCallable(
     Protocol
 ):  # pylint: disable=too-few-public-methods
     def __call__(
-        self, clazz: Type[BaseSettings] | BaseSettings
+        self, clazz: Union[Type[BaseSettings], BaseSettings]
     ) -> Dict[str, Any]:
         pass  # pragma: no cover
 
@@ -65,7 +66,7 @@ class SettingsStrategyMetaclass(ABCMeta):  # noqa: B024
 # pylint: disable=too-few-public-methods
 class SettingsStrategy(metaclass=SettingsStrategyMetaclass):
     __dependencies__: ClassVar[
-        Sequence[ModuleType | ImportError] | None
+        Optional[Sequence[Union[ModuleType, ImportError]]]
     ] = None
 
 
@@ -76,7 +77,7 @@ class EnvSettingsStrategy(SettingsStrategy):
     def __init__(
         self,
         env_prefix: Optional[str] = None,
-        env_vars: Dict[str, Optional[str]] | None = None,
+        env_vars: Union[Dict[str, Optional[str]], None] = None,
         case_sensitive: Optional[bool] = False,
     ):
         self.env_prefix: Optional[str] = env_prefix
@@ -100,12 +101,14 @@ class EnvSettingsStrategy(SettingsStrategy):
             self.env_vars = {k.lower(): v for k, v in self.env_vars.items()}
 
     def __call__(
-        self, clazz: Type[BaseSettings] | BaseSettings
+        self, clazz: Union[Type[BaseSettings], BaseSettings]
     ) -> Dict[str, Any]:
         return self._from_env(clazz, self.env_prefix)
 
     def _from_env(
-        self, clazz: Type[BaseModel] | BaseModel, prefix: Optional[str] = None
+        self,
+        clazz: Union[Type[BaseModel], BaseModel],
+        prefix: Optional[str] = None,
     ) -> Dict[str, Any]:
         prefix = prefix or ''
         result: Dict[str, Any] = {}
@@ -142,7 +145,7 @@ class DotEnvSettingsStrategy(EnvSettingsStrategy):
         self,
         env_prefix: Optional[str] = None,
         case_sensitive: Optional[bool] = False,
-        env_file: Optional[str | PathLike] = None,
+        env_file: Union[str, PathLike, None] = None,
         env_file_encoding: Optional[str] = None,
     ):
         super().__init__(
@@ -166,13 +169,13 @@ class FileSettingsStrategy(SettingsStrategy):
     __extensions__: ClassVar[Sequence[str]] = ()
 
     def __init__(
-        self, path: str | PathLike, config_format: Optional[str] = None
+        self, path: Union[str, PathLike], config_format: Optional[str] = None
     ):
         self.path: Path = Path(path).expanduser()
         self.config_format: Optional[str] = config_format
 
     def __call__(
-        self, clazz: Type[BaseSettings] | BaseSettings
+        self, clazz: Union[Type[BaseSettings], BaseSettings]
     ) -> Dict[str, Any]:
         if not self.is_acceptable(self.path, self.config_format):
             return {}
@@ -182,7 +185,7 @@ class FileSettingsStrategy(SettingsStrategy):
 
     @abstractmethod
     def get_loader(
-        self, clazz: Type[BaseSettings] | BaseSettings
+        self, clazz: Union[Type[BaseSettings], BaseSettings]
     ) -> ConfigLoadCallable:
         pass  # pragma: no cover
 
@@ -210,7 +213,7 @@ class JsonSettingsStrategy(FileSettingsStrategy):
     __extensions__ = 'json', 'js'
 
     def get_loader(
-        self, clazz: Type[BaseSettings] | BaseSettings
+        self, clazz: Union[Type[BaseSettings], BaseSettings]
     ) -> ConfigLoadCallable:
         return json_load
 
@@ -220,7 +223,7 @@ class YamlSettingsStrategy(FileSettingsStrategy):
     __extensions__ = 'yaml', 'yml'
 
     def get_loader(
-        self, clazz: Type[BaseSettings] | BaseSettings
+        self, clazz: Union[Type[BaseSettings], BaseSettings]
     ) -> ConfigLoadCallable:
         return yaml_load
 
@@ -230,7 +233,7 @@ class TomlSettingsStrategy(FileSettingsStrategy):
     __extensions__ = 'toml', 'tml'
 
     def get_loader(
-        self, clazz: Type[BaseSettings] | BaseSettings
+        self, clazz: Union[Type[BaseSettings], BaseSettings]
     ) -> ConfigLoadCallable:
         return toml_load
 
@@ -240,13 +243,13 @@ class Hcl2SettingsStrategy(FileSettingsStrategy):
     __extensions__ = 'hcl', 'hcl2', 'tf'
 
     def get_loader(
-        self, clazz: Type[BaseSettings] | BaseSettings
+        self, clazz: Union[Type[BaseSettings], BaseSettings]
     ) -> ConfigLoadCallable:
         return hcl2_load
 
 
 def read_env_file(
-    path: str | PathLike, *, encoding: Optional[str] = None
+    path: Union[str, PathLike], *, encoding: Optional[str] = None
 ) -> Dict[str, Optional[str]]:
     path = Path(path).expanduser()
     is_env_default = str(path) == '.env'

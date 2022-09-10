@@ -5,7 +5,7 @@ from collections import OrderedDict
 from decimal import Decimal
 from os import PathLike
 from pathlib import Path
-from typing import Any, ClassVar, Dict, Optional, Sequence, Type
+from typing import Any, ClassVar, Dict, Optional, Sequence, Type, Union
 
 from pydantic import BaseConfig, BaseModel
 from pydantic.config import Extra
@@ -29,7 +29,7 @@ class BaseSettings(BaseModel):
 
     class Config(BaseConfig):  # pylint: disable=too-few-public-methods
         env_prefix: Optional[str] = 'APP'
-        env_file: Optional[str | PathLike] = '.env'
+        env_file: Union[str, PathLike, None] = '.env'
         env_file_encoding: Optional[str] = None
         case_sensitive: bool = False
         validate_all: bool = True
@@ -41,10 +41,10 @@ class BaseSettings(BaseModel):
     def __init__(  # pylint: disable=too-many-arguments
         self,
         env_prefix: Optional[str] = None,
-        env_file: Optional[str | PathLike] = None,
-        config_file: Optional[str | PathLike] = None,
+        env_file: Union[str, PathLike, None] = None,
+        config_file: Union[str, PathLike, None] = None,
         config_format: Optional[str] = None,
-        source_strategies: Sequence[SettingsStrategyCallable] | None = None,
+        source_strategies: Optional[Sequence[SettingsStrategyCallable]] = None,
         **kw: Any,
     ) -> None:
         if config_file is not None:
@@ -115,7 +115,7 @@ class BaseSettings(BaseModel):
 
             if not isinstance(model, dict):
                 # for mypy
-                env_val: bool | bytes | str | int | float | complex | Decimal
+                env_val: Union[bool, bytes, str, int, float, complex, Decimal]
                 if model is None:
                     env_val = ''
                 elif isinstance(model, bool):

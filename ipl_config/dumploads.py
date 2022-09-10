@@ -3,12 +3,12 @@ import json
 from contextlib import contextmanager
 from os import PathLike
 from pathlib import Path
-from typing import IO, Any, Dict, Generator, Protocol  # noqa: I101
+from typing import IO, Any, Dict, Generator, Protocol, Union  # noqa: I101
 
 from ._optional_libs import hcl2, toml, yaml
 
 
-StrPathIO = str | PathLike | IO | io.IOBase
+StrPathIO = Union[str, PathLike, IO, io.IOBase]
 
 
 class ConfigLoadCallable(Protocol):  # pylint: disable=too-few-public-methods
@@ -34,7 +34,7 @@ class ConfigDumpsCallable(Protocol):  # pylint: disable=too-few-public-methods
 @contextmanager
 def ensure_stream(
     stream: StrPathIO, write: bool = False
-) -> Generator[IO | io.IOBase, None, None]:
+) -> Generator[Union[IO, io.IOBase], None, None]:
     if isinstance(stream, io.IOBase):
         yield stream
     else:
