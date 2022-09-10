@@ -26,6 +26,7 @@ class IplConfig(BaseSettings):  # pylint: disable=too-few-public-methods
     version: str  # from kwargs
     created: datetime  # from env
     http: Http
+    private_key: str
 
 
 if __name__ == "__main__":
