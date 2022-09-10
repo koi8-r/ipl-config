@@ -4,6 +4,7 @@ import os
 from datetime import datetime
 from ipaddress import IPv4Address
 from pathlib import Path
+from typing import List
 from unittest import mock
 
 import pytest
@@ -21,7 +22,7 @@ class Http(BaseModel):  # pylint: disable=too-few-public-methods
     host: str
     bind: str
     port: int
-    interfaces: list[IPv4Address]
+    interfaces: List[IPv4Address]
     transport: TcpTransport
     http2: bool = Field(env='HTTP_2')
 

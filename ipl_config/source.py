@@ -13,7 +13,6 @@ from typing import (  # noqa: I101
     ClassVar,
     Dict,
     Optional,
-    Protocol,
     Sequence,
     Type,
     Union,
@@ -24,6 +23,7 @@ from warnings import warn
 from pydantic import BaseModel
 from pydantic.env_settings import InitSettingsSource
 from pydantic.fields import SHAPE_SINGLETON, ModelField  # noqa: I101
+from typing_extensions import Protocol  # py38
 
 from ._optional_libs import dotenv  # noqa: I202
 from ._optional_libs import hcl2, toml, yaml

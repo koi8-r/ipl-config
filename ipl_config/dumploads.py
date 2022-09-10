@@ -3,7 +3,9 @@ import json
 from contextlib import contextmanager
 from os import PathLike
 from pathlib import Path
-from typing import IO, Any, Dict, Generator, Protocol, Union  # noqa: I101
+from typing import IO, Any, Dict, Generator, Union  # noqa: I101
+
+from typing_extensions import Protocol  # py38
 
 from ._optional_libs import hcl2, toml, yaml
 

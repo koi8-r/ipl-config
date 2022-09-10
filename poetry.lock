@@ -715,7 +715,7 @@ yaml = ["pyyaml"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7.2"
-content-hash = "88cc413f7a41f29641d55be10d1a4645b91b68f691a22df31d5ee720b347f913"
+content-hash = "f1f70473cdfa5b4387dd2f637e871f55cbc7d1ce0886cdb7eaece78beaf716ca"
 
 [metadata.files]
 astroid = [

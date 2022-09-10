@@ -1,16 +1,21 @@
-from __future__ import annotations
-
+import sys
 from collections.abc import MutableMapping
 from typing import Any, AnyStr, Iterator, Optional
 
 
-class LowerCaseDict(MutableMapping[AnyStr, Any]):
+if sys.version_info[:2] < (3, 9):
+    M = MutableMapping
+else:
+    M = MutableMapping[AnyStr, Any]  # py39
+
+
+class LowerCaseDict(M):
     __slots__ = ('_data',)
 
-    _data: MutableMapping[AnyStr, Any]
+    _data: M
 
     def __init__(
-        self, data: Optional[MutableMapping[AnyStr, Any]] = None, **kw: Any
+        self, data: Optional[M] = None, **kw: Any
     ) -> None:
         self._data = {}
         self.update(data or {}, **kw)
