@@ -1,9 +1,10 @@
 import io
 import json
 from contextlib import contextmanager
+from ipaddress import IPv4Address
 from os import PathLike
 from pathlib import Path
-from typing import IO, Any, Dict, Generator, Union  # noqa: I101
+from typing import IO, Any, Dict, Generator, Union, no_type_check  # noqa: I101
 
 from typing_extensions import Protocol  # py38
 
@@ -79,6 +80,15 @@ def json_loads(s: str, **kw: Any) -> Any:
 # === YAML ===
 
 
+class YamlDumper(yaml.SafeDumper):
+    pass
+
+
+YamlDumper.yaml_representers[
+    IPv4Address
+] = lambda self, data: self.represent_str(str(data))
+
+
 def yaml_dump(obj: Dict[str, Any], f: StrPathIO, **kw: Any) -> None:
     allow_unicode = kw.pop('allow_unicode', True)
     encoding = kw.pop('encoding', 'utf-8')
@@ -87,7 +97,7 @@ def yaml_dump(obj: Dict[str, Any], f: StrPathIO, **kw: Any) -> None:
         yaml.dump(
             obj,
             s,
-            yaml.SafeDumper,
+            YamlDumper,
             allow_unicode=allow_unicode,
             encoding=encoding,
             **kw,
@@ -112,13 +122,22 @@ def yaml_loads(s: str, **_: Any) -> Any:
 # === TOML ===
 
 
+class TomlEncoder(toml.TomlEncoder):
+    @no_type_check
+    def __init__(self, _dict=dict, preserve=False):
+        super().__init__(_dict, preserve)
+        self.dump_funcs[IPv4Address] = lambda v: self.dump_funcs[str](str(v))
+
+
 def toml_dump(obj: Dict[str, Any], f: StrPathIO, **kw: Any) -> None:
+    encoder = kw.pop('encoder', TomlEncoder(type(obj)))
     with ensure_stream(f, write=True) as s:
-        toml.dump(obj, s, **kw)
+        toml.dump(obj, s, encoder=encoder)
 
 
 def toml_dumps(obj: Dict[str, Any], **kw: Any) -> str:
-    return toml.dumps(obj, **kw)
+    encoder = kw.pop('encoder', TomlEncoder(type(obj)))
+    return toml.dumps(obj, encoder=encoder)
 
 
 def toml_load(f: StrPathIO, **kw: Any) -> Any:

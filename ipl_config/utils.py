@@ -14,9 +14,7 @@ class LowerCaseDict(M):
 
     _data: M
 
-    def __init__(
-        self, data: Optional[M] = None, **kw: Any
-    ) -> None:
+    def __init__(self, data: Optional[M] = None, **kw: Any) -> None:
         self._data = {}
         self.update(data or {}, **kw)
 

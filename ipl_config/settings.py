@@ -11,7 +11,7 @@ from pydantic import BaseConfig, BaseModel
 from pydantic.config import Extra
 from pydantic.utils import deep_update
 
-from .dumploads import StrPathIO, json_dump
+from .dumploads import StrPathIO, json_dump, toml_dump, yaml_dump
 from .source import (
     DotEnvSettingsStrategy,
     EnvSettingsStrategy,
@@ -99,6 +99,12 @@ class BaseSettings(BaseModel):
 
     def write_json(self, f: StrPathIO = sys.stdout, **kw: Any) -> None:
         return self._write_json(self.dict(), f, **kw)
+
+    def write_toml(self, f: StrPathIO = sys.stdout, **kw: Any) -> None:
+        return toml_dump(self.dict(), f, **kw)
+
+    def write_yaml(self, f: StrPathIO = sys.stdout, **kw: Any) -> None:
+        return yaml_dump(self.dict(), f, **kw)
 
     def to_env(self, **kw: Any) -> Dict[str, str]:
         prefix = self.__config__.env_prefix
