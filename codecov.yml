@@ -1,0 +1,11 @@
+# validate:
+# `cat codecov.yml| http https://codecov.io/validate Content-Type:text/plain`
+
+coverage:
+  status:
+    project:
+      default:
+        target: 90%
+        threshold: 1%
+        flags:
+        - unit

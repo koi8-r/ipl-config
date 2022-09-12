@@ -26,7 +26,7 @@ safety: ## checks your installed dependencies for known security vulnerabilities
 
 .PHONY: test
 test:
-	poetry run pytest tests/ --cov=ipl_config
+	poetry run pytest tests/ --cov=ipl_config --cov-report=html
 
 .PHONY: black
 black:
