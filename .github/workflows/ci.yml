@@ -63,6 +63,7 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         fail_ci_if_error: false
         verbose: true
+        flags: unit
 
   publish:
     if: startsWith(github.ref, 'refs/tags/v')
