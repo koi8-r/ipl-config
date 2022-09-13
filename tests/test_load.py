@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 from ipaddress import IPv4Address
 from pathlib import Path
-from typing import List
+from typing import List, Optional, Union
 from unittest import mock
 
 import pytest
@@ -147,3 +147,14 @@ def test_env_file() -> None:
         UserWarning, match=f"'{Config.Config.env_file}' is not a file"
     ):
         Config()
+
+
+def test_env_generics() -> None:
+    from typing import Dict
+    from pydantic.fields import SHAPE_NAME_LOOKUP, MAPPING_LIKE_SHAPES
+
+    class Config(BaseSettings):
+        ipv4: IPv4Address
+
+    print()
+    Config(ipv4='127.0.0.1')

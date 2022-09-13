@@ -23,6 +23,7 @@ from warnings import warn
 from pydantic import BaseModel
 from pydantic.env_settings import InitSettingsSource
 from pydantic.fields import SHAPE_SINGLETON, ModelField  # noqa: I101
+from pydantic.typing import get_origin, is_union
 from typing_extensions import Protocol  # py38
 
 from ._optional_libs import dotenv  # noqa: I202
@@ -122,10 +123,20 @@ class EnvSettingsStrategy(SettingsStrategy):
             env_name = extra.get('env')
             if not env_name:
                 env_name = prefix + (prefix and '_' or '') + field.name
-            if field.shape == SHAPE_SINGLETON and issubclass(
-                field.type_, BaseModel
-            ):
-                env_val = self._from_env(field.type_, prefix=env_name)
+
+            print(
+                f"name={field.name} type={field.type_} "
+                f"shape={field.shape} sub={field.sub_fields}"
+            )
+
+            origin = get_origin(field.type_)
+            env_val = None
+
+            if field.shape == SHAPE_SINGLETON and not is_union(origin):
+                if issubclass(field.type_, BaseModel):
+                    env_val = self._from_env(field.type_, prefix=env_name)
+                if issubclass(field.type_, BaseModel):
+                    pass
             else:
                 env_val = self.env_vars.get(  # type: ignore[assignment]
                     env_name if self.case_sensitive else env_name.lower()
