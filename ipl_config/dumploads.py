@@ -79,14 +79,12 @@ def json_loads(s: str, **kw: Any) -> Any:
 
 # === YAML ===
 
-
-class YamlDumper(yaml.SafeDumper):
-    pass
-
-
-YamlDumper.yaml_representers[
-    IPv4Address
-] = lambda self, data: self.represent_str(str(data))
+# TODO: DELETEME
+# class YamlDumper(yaml.SafeDumper):
+#     pass
+# YamlDumper.yaml_representers[IPv4Address] = lambda self, data: (
+#     self.represent_str(str(data))
+# )
 
 
 def yaml_dump(obj: Dict[str, Any], f: StrPathIO, **kw: Any) -> None:
@@ -97,7 +95,7 @@ def yaml_dump(obj: Dict[str, Any], f: StrPathIO, **kw: Any) -> None:
         yaml.dump(
             obj,
             s,
-            YamlDumper,
+            yaml.SafeDumper,
             allow_unicode=allow_unicode,
             encoding=encoding,
             **kw,
@@ -121,16 +119,22 @@ def yaml_loads(s: str, **_: Any) -> Any:
 
 # === TOML ===
 
-
+# TODO: DELETEME
 class TomlEncoder(toml.TomlEncoder):
+    """
+    This is example
+    """
+
     @no_type_check
     def __init__(self, _dict=dict, preserve=False):
         super().__init__(_dict, preserve)
+        # We can?: pydantic.json.ENCODERS_BY_TYPE ^ dump_funcs
         self.dump_funcs[IPv4Address] = lambda v: self.dump_funcs[str](str(v))
 
 
 def toml_dump(obj: Dict[str, Any], f: StrPathIO, **kw: Any) -> None:
-    encoder = kw.pop('encoder', TomlEncoder(type(obj)))
+    # encoder = kw.pop('encoder', TomlEncoder(type(obj)))
+    encoder = kw.pop('encoder', None)
     with ensure_stream(f, write=True) as s:
         toml.dump(obj, s, encoder=encoder)
 

@@ -5,7 +5,19 @@ from collections import OrderedDict
 from decimal import Decimal
 from os import PathLike
 from pathlib import Path
-from typing import Any, ClassVar, Dict, Optional, Sequence, Type, Union
+from typing import (
+    AbstractSet,
+    Any,
+    ClassVar,
+    Dict,
+    Generator,
+    Mapping,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    Union,
+)
 
 from pydantic import BaseConfig, BaseModel
 from pydantic.config import Extra
@@ -22,6 +34,12 @@ from .source import (
     TomlSettingsStrategy,
     YamlSettingsStrategy,
 )
+
+
+IntStr = Union[int, str]
+AbstractSetIntStr = AbstractSet[IntStr]
+MappingIntStrAny = Mapping[IntStr, Any]
+TupleGenerator = Generator[Tuple[str, Any], None, None]
 
 
 class BaseSettings(BaseModel):
@@ -89,6 +107,53 @@ class BaseSettings(BaseModel):
             **deep_update(*reversed([s(self) for s in source_strategies]))
         )
 
+    def safe_dict(
+        self,
+        *,
+        include: Optional[Union[AbstractSetIntStr, MappingIntStrAny]] = None,
+        exclude: Optional[Union[AbstractSetIntStr, MappingIntStrAny]] = None,
+        by_alias: bool = False,
+        exclude_unset: bool = False,
+        exclude_defaults: bool = False,
+        exclude_none: bool = False,
+    ) -> Dict[str, Any]:
+        return dict(
+            self.safe_iter(
+                to_dict=True,
+                by_alias=by_alias,
+                include=include,
+                exclude=exclude,
+                exclude_unset=exclude_unset,
+                exclude_defaults=exclude_defaults,
+                exclude_none=exclude_none,
+            )
+        )
+
+    def safe_iter(  # pylint: disable=too-many-arguments
+        self,
+        to_dict: bool = False,
+        by_alias: bool = False,
+        include: Optional[Union[AbstractSetIntStr, MappingIntStrAny]] = None,
+        exclude: Optional[Union[AbstractSetIntStr, MappingIntStrAny]] = None,
+        exclude_unset: bool = False,
+        exclude_defaults: bool = False,
+        exclude_none: bool = False,
+    ) -> TupleGenerator:
+        for k, v in super()._iter(
+            to_dict,
+            by_alias,
+            include,
+            exclude,
+            exclude_unset,
+            exclude_defaults,
+            exclude_none,
+        ):
+            try:
+                v = self.__json_encoder__(v)
+            except TypeError:
+                pass
+            yield k, v,
+
     def _write_json(self, o: Dict[str, Any], f: StrPathIO, **kw: Any) -> None:
         # take encoder from `self.__config__.json_encoders`
         encoder = kw.pop('default', self.__json_encoder__)
@@ -101,10 +166,10 @@ class BaseSettings(BaseModel):
         return self._write_json(self.dict(), f, **kw)
 
     def write_toml(self, f: StrPathIO = sys.stdout, **kw: Any) -> None:
-        return toml_dump(self.dict(), f, **kw)
+        return toml_dump(self.safe_dict(), f, **kw)
 
     def write_yaml(self, f: StrPathIO = sys.stdout, **kw: Any) -> None:
-        return yaml_dump(self.dict(), f, **kw)
+        return yaml_dump(self.safe_dict(), f, **kw)
 
     def to_env(self, **kw: Any) -> Dict[str, str]:
         prefix = self.__config__.env_prefix
