@@ -14,16 +14,19 @@ from typing import (  # noqa: I101
     Dict,
     Optional,
     Sequence,
+    Tuple,
     Type,
     Union,
     no_type_check,
 )
 from warnings import warn
 
+import pydantic
 from pydantic import BaseModel
 from pydantic.env_settings import InitSettingsSource
-from pydantic.fields import SHAPE_SINGLETON, ModelField  # noqa: I101
+from pydantic.fields import ModelField
 from pydantic.typing import get_origin, is_union
+from pydantic.utils import lenient_issubclass
 from typing_extensions import Protocol  # py38
 
 from ._optional_libs import dotenv  # noqa: I202
@@ -102,50 +105,70 @@ class EnvSettingsStrategy(SettingsStrategy):
             self.env_vars = {k.lower(): v for k, v in self.env_vars.items()}
 
     def __call__(
-        self, clazz: Union[Type[BaseSettings], BaseSettings]
-    ) -> Dict[str, Any]:
-        return self._from_env(clazz, self.env_prefix)
-
-    def _from_env(
         self,
-        clazz: Union[Type[BaseModel], BaseModel],
+        clz: Union[Type[BaseModel], BaseModel],
         prefix: Optional[str] = None,
     ) -> Dict[str, Any]:
-        prefix = prefix or ''
-        result: Dict[str, Any] = {}
+        if prefix is None:
+            prefix = self.env_prefix
 
-        field: ModelField
-        for field in clazz.__fields__.values():
-            extra = field.field_info.extra
-            if extra.get('deprecated'):
-                warn(f"{field.name!r} is deprecated", DeprecationWarning)
-
-            env_name = extra.get('env')
-            if not env_name:
-                env_name = prefix + (prefix and '_' or '') + field.name
-
-            print(
-                f"name={field.name} type={field.type_} "
-                f"shape={field.shape} sub={field.sub_fields}"
+        return dict(
+            filter(
+                lambda x: x is not None,
+                (
+                    self._get_env_val(
+                        clz=clz,
+                        field=f,
+                        prefix=prefix,
+                    )
+                    for f in clz.__fields__.values()
+                ),
             )
+        )
 
-            origin = get_origin(field.type_)
-            env_val = None
+    def _get_env_val(
+        self,
+        clz: Union[Type[BaseModel], BaseModel],
+        field: ModelField,
+        prefix: Optional[str] = None,
+    ) -> Optional[Tuple[str, Any]]:
+        prefix = prefix or ''
 
-            if field.shape == SHAPE_SINGLETON and not is_union(origin):
-                if issubclass(field.type_, BaseModel):
-                    env_val = self._from_env(field.type_, prefix=env_name)
-                if issubclass(field.type_, BaseModel):
-                    pass
-            else:
-                env_val = self.env_vars.get(  # type: ignore[assignment]
-                    env_name if self.case_sensitive else env_name.lower()
-                )
+        if field.field_info.extra.get('deprecated'):
+            warn(f"{field.name!r} is deprecated", DeprecationWarning)
+        if field.has_alias:
+            warn('Instead of aliases use the `env` setting', FutureWarning)
 
+        env_name = field.field_info.extra.get('env')
+        if not env_name:
+            env_name = prefix + (prefix and '_' or '') + field.name
+        if self.case_sensitive:
+            env_name = env_name.lower()
+
+        env_val = self.env_vars.get(env_name)  # type: ignore[assignment]
+
+        if (
+            field.shape == pydantic.fields.SHAPE_SINGLETON
+            and lenient_issubclass(field.type_, BaseModel)
+        ):
+            env_val = self.__call__(field.type_, prefix=env_name)
+        elif field.is_complex():
             if env_val is not None:
-                result[field.alias] = env_val
+                env_val = clz.__config__.json_loads(env_val)
+        elif is_union(get_origin(field.type_)):
+            for f in field.sub_fields:
+                try:
+                    if env_val is not None and f.is_complex():
+                        env_val = clz.__config__.json_loads(env_val)
+                    else:
+                        break
+                except ValueError:
+                    pass
 
-        return result
+        if env_val is not None:
+            return field.alias, env_val,
+
+        return
 
 
 # pylint: disable=too-few-public-methods

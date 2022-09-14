@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 from ipaddress import IPv4Address
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Union
 from unittest import mock
 
 import pytest
@@ -149,12 +149,29 @@ def test_env_file() -> None:
         Config()
 
 
-def test_env_generics() -> None:
+def test_env_complex() -> None:
     from typing import Dict
-    from pydantic.fields import SHAPE_NAME_LOOKUP, MAPPING_LIKE_SHAPES
 
     class Config(BaseSettings):
-        ipv4: IPv4Address
+        ipv4: IPv4Address = Field(alias='ip')
+        extra: Dict[str, Dict[str, float]]
+        meta: Dict[str, int]
+        any_of: Union[Dict[str, int], Union[float, int], None]
+        lst: List[str]
 
-    print()
-    Config(ipv4='127.0.0.1')
+    with mock.patch.dict(
+        os.environ,
+        {
+            'APP_IPV4': '127.0.0.1',
+            'APP_META': '{"x": 1}',
+            'APP_EXTRA': '{"sub": {"x": 1.5}}',
+            'APP_ANY_OF': '1',
+            'APP_LST': '[1]',
+        },
+    ):
+        c = Config()
+
+        assert isinstance(c.extra['sub']['x'], float)
+        assert isinstance(c.meta['x'], int)
+        assert isinstance(c.any_of, float)
+        assert c.lst == ['1']
