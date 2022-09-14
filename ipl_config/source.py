@@ -14,15 +14,17 @@ from typing import (  # noqa: I101
     Dict,
     Optional,
     Sequence,
+    Tuple,
     Type,
     Union,
     no_type_check,
 )
 from warnings import warn
 
+import pydantic
 from pydantic import BaseModel
 from pydantic.env_settings import InitSettingsSource
-from pydantic.fields import SHAPE_SINGLETON, ModelField  # noqa: I101
+from pydantic.fields import ModelField
 from pydantic.typing import get_origin, is_union
 from typing_extensions import Protocol  # py38
 
@@ -102,50 +104,68 @@ class EnvSettingsStrategy(SettingsStrategy):
             self.env_vars = {k.lower(): v for k, v in self.env_vars.items()}
 
     def __call__(
-        self, clazz: Union[Type[BaseSettings], BaseSettings]
-    ) -> Dict[str, Any]:
-        return self._from_env(clazz, self.env_prefix)
-
-    def _from_env(
         self,
-        clazz: Union[Type[BaseModel], BaseModel],
+        clazz: Union[Type[BaseSettings], BaseSettings],
         prefix: Optional[str] = None,
     ) -> Dict[str, Any]:
-        prefix = prefix or ''
-        result: Dict[str, Any] = {}
+        if prefix is None:
+            prefix = self.env_prefix
 
-        field: ModelField
-        for field in clazz.__fields__.values():
-            extra = field.field_info.extra
-            if extra.get('deprecated'):
-                warn(f"{field.name!r} is deprecated", DeprecationWarning)
+        # env vars is cleaning during iterations
+        env_vars: Dict[str, str] = self.env_vars.copy()
 
-            env_name = extra.get('env')
-            if not env_name:
-                env_name = prefix + (prefix and '_' or '') + field.name
-
-            print(
-                f"name={field.name} type={field.type_} "
-                f"shape={field.shape} sub={field.sub_fields}"
+        return dict(filter(
+            lambda x: x is not None, (
+                self._get_env_val(f, env_vars, prefix=prefix)
+                for f in clazz.__fields__.values()
             )
+        ))
 
-            origin = get_origin(field.type_)
-            env_val = None
+    def _get_env_val(
+        self,
+        field: ModelField,
+        env_vars: Dict[str, str],
+        prefix: Optional[str] = None,
+    ) -> Optional[Tuple[str, Any]]:
+        prefix = prefix or ''
 
-            if field.shape == SHAPE_SINGLETON and not is_union(origin):
-                if issubclass(field.type_, BaseModel):
-                    env_val = self._from_env(field.type_, prefix=env_name)
-                if issubclass(field.type_, BaseModel):
-                    pass
-            else:
-                env_val = self.env_vars.get(  # type: ignore[assignment]
-                    env_name if self.case_sensitive else env_name.lower()
-                )
+        extra = field.field_info.extra
+        if extra.get('deprecated'):
+            warn(f"{field.name!r} is deprecated", DeprecationWarning)
 
-            if env_val is not None:
-                result[field.alias] = env_val
+        env_name = extra.get('env')
+        if not env_name:
+            env_name = prefix + (prefix and '_' or '') + field.name
+        env_name = env_name if self.case_sensitive else env_name.lower()
 
-        return result
+        origin = get_origin(field.type_)
+        if is_union(origin):  # take the first sub type only
+            f: ModelField
+            for f in field.sub_fields:
+                f.name = env_name  # dirty fix the sub name
+                f.alias = field.alias  # dirty fix the sub name
+                return self._get_env_val(f, env_vars, prefix='')
+
+        if issubclass(field.type_, BaseModel):
+            env_val = self.__call__(field.type_, prefix=env_name)
+        elif (
+            issubclass(field.type_, dict)
+            or field.shape in pydantic.fields.MAPPING_LIKE_SHAPES
+        ):
+            env_val = {}
+            for k in set(_ for _ in env_vars if _.startswith(env_name + '_')):
+                env_val[k[1 + len(env_name):]] = env_vars.pop(k)  # hide env
+
+            env_val = env_val or None  # empty dict is a missed
+        else:
+            env_val = env_vars.get(env_name)  # type: ignore[assignment]
+
+        # env_vars.pop(env_name, None)  # hide env if it is not hid
+
+        if env_val is not None:
+            return field.alias, env_val,
+
+        return
 
 
 # pylint: disable=too-few-public-methods

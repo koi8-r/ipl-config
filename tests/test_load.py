@@ -151,10 +151,27 @@ def test_env_file() -> None:
 
 def test_env_generics() -> None:
     from typing import Dict
-    from pydantic.fields import SHAPE_NAME_LOOKUP, MAPPING_LIKE_SHAPES
 
     class Config(BaseSettings):
         ipv4: IPv4Address
+        meta_r: dict
+        meta: Dict[str, int]
+        u_i: Union[float, int, str, None]
+        u_d: Union[Dict[int, int], None]
 
-    print()
-    Config(ipv4='127.0.0.1')
+    with mock.patch.dict(os.environ, {
+        'APP_IPV4': '127.0.0.1',
+        'app_meta_r_abc': '1x',
+        'APP_META_Zz': '1',
+        'APP_U_I': '123',
+        'APP_U_D_99': '123',
+    }):
+        print()
+        c = Config()
+        print(c.json(indent=4))
+
+        assert c.meta_r['abc'] == '1x'
+        assert c.meta['zz'] == 1
+        assert type(c.u_i) is float
+        assert c.u_i == 123
+        assert c.u_d == {99.0: 123}
