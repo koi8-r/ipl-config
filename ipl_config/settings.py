@@ -30,7 +30,7 @@ from .source import (
     Hcl2SettingsStrategy,
     JsonSettingsStrategy,
     KwSettingsStrategy,
-    SettingsStrategyCallable,
+    SettingsStrategy,
     TomlSettingsStrategy,
     YamlSettingsStrategy,
 )
@@ -62,7 +62,7 @@ class BaseSettings(BaseModel):
         env_file: Union[str, PathLike, None] = None,
         config_file: Union[str, PathLike, None] = None,
         config_format: Optional[str] = None,
-        source_strategies: Optional[Sequence[SettingsStrategyCallable]] = None,
+        source_strategies: Optional[Sequence[SettingsStrategy]] = None,
         **kw: Any,
     ) -> None:
         if config_file is not None:
@@ -153,6 +153,10 @@ class BaseSettings(BaseModel):
             except TypeError:
                 pass
             yield k, v,
+
+    # def load_ini(self):
+    #     from configparser import ConfigParser
+    #     ConfigParser().read_file()
 
     def _write_json(self, o: Dict[str, Any], f: StrPathIO, **kw: Any) -> None:
         # take encoder from `self.__config__.json_encoders`

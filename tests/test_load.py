@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 from ipaddress import IPv4Address
 from pathlib import Path
-from typing import List, Union
+from typing import Dict, List, Union
 from unittest import mock
 
 import pytest
@@ -150,8 +150,6 @@ def test_env_file() -> None:
 
 
 def test_env_complex() -> None:
-    from typing import Dict
-
     class Config(BaseSettings):
         ipv4: IPv4Address = Field(alias='ip')
         extra: Dict[str, Dict[str, float]]

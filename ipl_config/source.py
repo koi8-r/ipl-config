@@ -27,7 +27,6 @@ from pydantic.env_settings import InitSettingsSource
 from pydantic.fields import ModelField
 from pydantic.typing import get_origin, is_union
 from pydantic.utils import lenient_issubclass
-from typing_extensions import Protocol  # py38
 
 from ._optional_libs import dotenv  # noqa: I202
 from ._optional_libs import hcl2, toml, yaml
@@ -42,15 +41,6 @@ from .dumploads import (
 
 if TYPE_CHECKING:
     from ipl_config import BaseSettings  # pragma: no cover
-
-
-class SettingsStrategyCallable(
-    Protocol
-):  # pylint: disable=too-few-public-methods
-    def __call__(
-        self, clazz: Union[Type[BaseSettings], BaseSettings]
-    ) -> Dict[str, Any]:
-        pass  # pragma: no cover
 
 
 class SettingsStrategyMetaclass(ABCMeta):  # noqa: B024
@@ -72,6 +62,12 @@ class SettingsStrategy(metaclass=SettingsStrategyMetaclass):
     __dependencies__: ClassVar[
         Optional[Sequence[Union[ModuleType, ImportError]]]
     ] = None
+
+    @abstractmethod
+    def __call__(
+        self, clazz: Union[Type[BaseSettings], BaseSettings]
+    ) -> Dict[str, Any]:
+        pass  # pragma: no cover
 
 
 # pylint: disable=too-few-public-methods
@@ -114,19 +110,15 @@ class EnvSettingsStrategy(SettingsStrategy):
 
         return dict(
             filter(
-                lambda x: x is not None,
+                lambda x: x is not None,  # type: ignore
                 (
-                    self._get_env_val(
-                        clz=clz,
-                        field=f,
-                        prefix=prefix,
-                    )
+                    self._get_env_val(clz=clz, field=f, prefix=prefix)
                     for f in clz.__fields__.values()
                 ),
             )
         )
 
-    def _get_env_val(
+    def _get_env_val(  # pylint: disable=too-many-branches
         self,
         clz: Union[Type[BaseModel], BaseModel],
         field: ModelField,
@@ -145,13 +137,13 @@ class EnvSettingsStrategy(SettingsStrategy):
         if self.case_sensitive:
             env_name = env_name.lower()
 
-        env_val = self.env_vars.get(env_name)  # type: ignore[assignment]
+        env_val: Any = self.env_vars.get(env_name)
 
         if (
             field.shape == pydantic.fields.SHAPE_SINGLETON
-            and lenient_issubclass(field.type_, BaseModel)
+            and lenient_issubclass(field.type_, BaseModel)  # noqa: W503
         ):
-            env_val = self.__call__(field.type_, prefix=env_name)
+            env_val = self(field.type_, prefix=env_name)
         elif field.is_complex():
             if env_val is not None:
                 env_val = clz.__config__.json_loads(env_val)
@@ -166,9 +158,9 @@ class EnvSettingsStrategy(SettingsStrategy):
                     pass
 
         if env_val is not None:
-            return field.alias, env_val,
+            return field.alias, env_val
 
-        return
+        return None
 
 
 # pylint: disable=too-few-public-methods
@@ -193,6 +185,11 @@ class DotEnvSettingsStrategy(EnvSettingsStrategy):
 
 # pylint: disable=too-few-public-methods
 class KwSettingsStrategy(SettingsStrategy, InitSettingsSource):
+    def __call__(
+        self, clazz: Union[Type[BaseSettings], BaseSettings]
+    ) -> Dict[str, Any]:
+        return self.init_kwargs
+
     def __init__(self, **kw: Any) -> None:
         super().__init__(init_kwargs=kw)
 
