@@ -28,14 +28,14 @@ class IplConfig(BaseSettings):  # pylint: disable=too-few-public-methods
     created: datetime  # from env
     http: Http
     private_key: str
-    group_by_id: Union[Dict[int, str], None]
+    groups: Union[Dict[int, str], None]
 
 
 if __name__ == "__main__":
     environ['app_http_bind'] = '1.1.1.1'
     environ['buff_size'] = '-1'
     environ['app_created'] = '2000-01-01T00:00:00Z'
-    environ['app_group_by_id_0'] = 'root'
+    environ['app_groups'] = '{"0": "root"}'
 
     root = Path('../')
 

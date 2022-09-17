@@ -11,7 +11,7 @@
 - hcl2
 - environ
 - .env
-- TODO: multiline PEM keys load with cryptography
+- TODO: multiline PEM keys load with cryptography (cryptography extra dep and FIELD_TYPE)
 
 ## Examples
 ### .env
@@ -69,14 +69,14 @@ class IplConfig(BaseSettings):
     created: datetime  # from env
     http: Http  # env also works for complex objects
     private_key: str  # from dotenv
-    group_by_id: Union[Dict[int, str], None]
+    groups: Union[Dict[int, str], None]
 
 
 if __name__ == "__main__":
     environ['app_http_bind'] = '1.1.1.1'
     environ['buff_size'] = '-1'
     environ['app_created'] = '2000-01-01T00:00:00Z'
-    environ['app_group_by_id_0'] = 'root'
+    environ['app_groups'] = '{"0": "root"}'
 
 
     root = Path('.')
