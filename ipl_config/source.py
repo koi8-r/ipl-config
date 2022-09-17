@@ -134,7 +134,7 @@ class EnvSettingsStrategy(SettingsStrategy):
         env_name = field.field_info.extra.get('env')
         if not env_name:
             env_name = prefix + (prefix and '_' or '') + field.name
-        if self.case_sensitive:
+        if not self.case_sensitive:
             env_name = env_name.lower()
 
         env_val: Any = self.env_vars.get(env_name)
