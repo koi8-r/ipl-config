@@ -65,19 +65,21 @@ class BaseSettings(BaseModel):
         source_strategies: Optional[Sequence[SettingsStrategy]] = None,
         **kw: Any,
     ) -> None:
-        if config_file is not None:
-            config_file = Path(config_file)
-
         if source_strategies is None:
             cfg = self.__config__
+
+            if config_file is not None:
+                config_file = Path(config_file)
+            if env_prefix is None:
+                env_prefix = cfg.env_prefix
+
             source_strategies = [
                 KwSettingsStrategy(**kw),
                 EnvSettingsStrategy(
-                    env_prefix=env_prefix or cfg.env_prefix,
-                    case_sensitive=cfg.case_sensitive,
+                    env_prefix=env_prefix, case_sensitive=cfg.case_sensitive
                 ),
                 DotEnvSettingsStrategy(
-                    env_prefix=env_prefix or cfg.env_prefix,
+                    env_prefix=env_prefix,
                     env_file=env_file or cfg.env_file,
                     env_file_encoding=cfg.env_file_encoding,
                     case_sensitive=cfg.case_sensitive,
@@ -153,10 +155,6 @@ class BaseSettings(BaseModel):
             except TypeError:
                 pass
             yield k, v,
-
-    # def load_ini(self):
-    #     from configparser import ConfigParser
-    #     ConfigParser().read_file()
 
     def _write_json(self, o: Dict[str, Any], f: StrPathIO, **kw: Any) -> None:
         # take encoder from `self.__config__.json_encoders`
