@@ -52,7 +52,7 @@ pylint = "^2.15.2"
 bandit = "^1.7.4"
 black = "^22.8.0"
 coverage = "^6.4.4"
-safety = "^2.1.1"
+safety = "^2.2.0"
 mypy = "^0.971"
 
 
