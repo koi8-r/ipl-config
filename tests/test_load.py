@@ -156,6 +156,7 @@ def test_env_complex() -> None:
         meta: Dict[str, int]
         any_of: Union[Dict[str, int], Union[float, int], None]
         lst: List[str]
+        js_err: Union[dict, str]
 
     with mock.patch.dict(
         os.environ,
@@ -164,6 +165,7 @@ def test_env_complex() -> None:
             'APP_META': '{"x": 1}',
             'APP_EXTRA': '{"sub": {"x": 1.5}}',
             'APP_ANY_OF': '1',
+            'APP_JS_ERR': '{1}',
             'APP_LST': '[1]',
         },
     ):
@@ -172,6 +174,7 @@ def test_env_complex() -> None:
         assert isinstance(c.extra['sub']['x'], float)
         assert isinstance(c.meta['x'], int)
         assert isinstance(c.any_of, float)
+        assert c.js_err == '{1}'
         assert c.lst == ['1']
 
 
