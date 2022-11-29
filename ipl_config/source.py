@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import sys
 from abc import ABCMeta, abstractmethod
 from os import PathLike
 from pathlib import Path
@@ -131,9 +132,10 @@ class EnvSettingsStrategy(SettingsStrategy):
         if field.has_alias:
             warn('Instead of aliases use the `env` setting', FutureWarning)
 
+        env_prefix = field.field_info.extra.get('env_prefix') or prefix
         env_name = field.field_info.extra.get('env')
         if not env_name:
-            env_name = prefix + (prefix and '_' or '') + field.name
+            env_name = env_prefix + (env_prefix and '_' or '') + field.name
         if not self.case_sensitive:
             env_name = env_name.lower()
 

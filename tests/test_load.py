@@ -173,3 +173,31 @@ def test_env_complex() -> None:
         assert isinstance(c.meta['x'], int)
         assert isinstance(c.any_of, float)
         assert c.lst == ['1']
+
+
+def test_env_complex_prefix() -> None:
+    class Vault(BaseModel):  # pylint: disable=too-few-public-methods
+        # class Config:  # pylint: disable=too-few-public-methods
+        #     env_prefix = 'VAULT'
+
+        token: str
+        # ns: Optional[str]
+        # addr: Optional[str]
+        # role: Optional[str]
+
+    class Config(BaseSettings):
+        class Config:  # pylint: disable=too-few-public-methods
+            env_prefix = 'APP'
+
+        vault: Vault = Field(env_prefix='X')
+
+    with mock.patch.dict(
+        os.environ, {
+            'X_VAULT_TOKEN': 'xyz',
+            # 'VAULT_TOKEN': 'abcdef',
+            # 'VAULT_NAMESPACE': 'foo/bar',
+        }
+    ):
+        cfg = Config()
+        expected = 'xyz'
+        assert cfg.vault.token == expected
